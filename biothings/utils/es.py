@@ -1,10 +1,8 @@
 import copy
-import datetime
 import itertools
 import json
 import re
 import time
-import warnings
 from typing import Optional, List
 
 from elasticsearch import (Elasticsearch, NotFoundError, RequestError,
@@ -92,8 +90,6 @@ class ESIndexer():
         self._es = get_es(es_host, **kwargs)
         # the name of the index when ESIndexer is initialized
         self.canonical_index_name = index
-        # whether the initial index name is an alias. None = Don't know.
-        self.canon_index_is_alias = None
         if check_index:
             # if index is actually an alias, resolve the alias to
             # the real underlying index
@@ -102,11 +98,9 @@ class ESIndexer():
                 # this was an alias
                 assert len(res) == 1, "Expecing '%s' to be an alias, but got nothing..." % index
                 self._index = list(res.keys())[0]
-                self.canon_index_is_alias = True
             except NotFoundError:
                 # this was a real index name
                 self._index = index
-                self.canon_index_is_alias = False
 
         self._doc_type = None
         if doc_type:
@@ -319,9 +313,6 @@ class ESIndexer():
         """return the current _meta field."""
         m = self.get_mapping()
         doc_type = self._doc_type
-        print("====")
-        print(m)
-        print("====")
         if doc_type is None:
             # fetch doc_type from mapping
 
